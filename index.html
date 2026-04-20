@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="description" content="KeeraMaps – Navigate smarter with real-time maps, directions, and place discovery." />
+  <meta name="theme-color" content="#1a1f2e" />
+  <title>KeeraMaps – Navigate Smarter</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Leaflet Routing Machine CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+  <!-- Leaflet Control Geocoder CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ===================== SPLASH SCREEN ===================== -->
+  <div id="splash-screen" class="splash">
+    <div class="splash-content">
+      <div class="splash-logo">
+        <div class="splash-logo-icon">
+          <i class="fa-solid fa-location-dot"></i>
+        </div>
+        <h1 class="splash-title">Keera<span>Maps</span></h1>
+      </div>
+      <p class="splash-tagline">Navigate your world, beautifully.</p>
+      <div class="splash-loader">
+        <div class="loader-bar"></div>
+      </div>
+    </div>
+    <div class="splash-bg-glow glow-1"></div>
+    <div class="splash-bg-glow glow-2"></div>
+    <div class="splash-bg-glow glow-3"></div>
+  </div>
+
+  <!-- ===================== MAIN APP ===================== -->
+  <div id="app" class="app hidden">
+
+    <!-- ========== TOP SEARCH BAR ========== -->
+    <div class="top-bar" id="top-bar">
+      <div class="search-container">
+        <button class="menu-btn" id="menu-btn" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="search-box" id="search-box">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="text" id="search-input" placeholder="Search KeeraMaps" autocomplete="off" />
+          <button class="mic-btn" id="mic-btn" aria-label="Voice search">
+            <i class="fa-solid fa-microphone"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Filter Chips -->
+      <div class="filter-chips" id="filter-chips">
+        <button class="chip active" data-type="all" id="chip-all">
+          <i class="fa-solid fa-border-all"></i> Explore
+        </button>
+        <button class="chip" data-type="restaurant" id="chip-restaurant">
+          <i class="fa-solid fa-utensils"></i> Food
+        </button>
+        <button class="chip" data-type="hotel" id="chip-hotel">
+          <i class="fa-solid fa-hotel"></i> Hotels
+        </button>
+        <button class="chip" data-type="hospital" id="chip-hospital">
+          <i class="fa-solid fa-hospital"></i> Health
+        </button>
+        <button class="chip" data-type="fuel" id="chip-fuel">
+          <i class="fa-solid fa-gas-pump"></i> Fuel
+        </button>
+        <button class="chip" data-type="atm" id="chip-atm">
+          <i class="fa-solid fa-building-columns"></i> ATM
+        </button>
+      </div>
+    </div>
+
+    <!-- ========== SEARCH RESULTS DROPDOWN ========== -->
+    <div class="search-results" id="search-results" role="listbox" aria-label="Search suggestions">
+      <div class="search-results-inner" id="search-results-inner"></div>
+    </div>
+
+    <!-- ========== MAP CONTAINER ========== -->
+    <div id="map"></div>
+
+    <!-- ========== MAP CONTROLS (right side) ========== -->
+    <div class="map-controls" id="map-controls">
+      <button class="map-ctrl-btn" id="btn-layers" aria-label="Map layers" title="Map Layers">
+        <i class="fa-solid fa-layer-group"></i>
+      </button>
+      <button class="map-ctrl-btn" id="btn-traffic" aria-label="Traffic" title="Traffic">
+        <i class="fa-solid fa-car"></i>
+      </button>
+      <button class="map-ctrl-btn" id="btn-satellite" aria-label="Satellite view" title="Satellite">
+        <i class="fa-solid fa-satellite"></i>
+      </button>
+      <div class="ctrl-divider"></div>
+      <button class="map-ctrl-btn" id="btn-zoom-in" aria-label="Zoom in">
+        <i class="fa-solid fa-plus"></i>
+      </button>
+      <button class="map-ctrl-btn" id="btn-zoom-out" aria-label="Zoom out">
+        <i class="fa-solid fa-minus"></i>
+      </button>
+    </div>
+
+    <!-- ========== MY LOCATION BUTTON ========== -->
+    <button class="locate-btn" id="locate-btn" aria-label="My location">
+      <i class="fa-solid fa-location-crosshairs"></i>
+    </button>
+
+    <!-- ========== COMPASS ========== -->
+    <div class="compass" id="compass">
+      <div class="compass-needle">
+        <span class="north">N</span>
+      </div>
+    </div>
+
+    <!-- ========== LAYERS PANEL ========== -->
+    <div class="layers-panel hidden" id="layers-panel">
+      <div class="panel-handle"></div>
+      <h3 class="panel-title">Map Type</h3>
+      <div class="layer-options">
+        <button class="layer-opt active" id="layer-default" data-layer="default">
+          <div class="layer-preview default-preview"></div>
+          <span>Default</span>
+        </button>
+        <button class="layer-opt" id="layer-satellite" data-layer="satellite">
+          <div class="layer-preview satellite-preview"></div>
+          <span>Satellite</span>
+        </button>
+        <button class="layer-opt" id="layer-terrain" data-layer="terrain">
+          <div class="layer-preview terrain-preview"></div>
+          <span>Terrain</span>
+        </button>
+        <button class="layer-opt" id="layer-dark" data-layer="dark">
+          <div class="layer-preview dark-preview"></div>
+          <span>Dark</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ========== BOTTOM NAVIGATION ========== -->
+    <nav class="bottom-nav" id="bottom-nav">
+      <button class="nav-item active" id="nav-explore" data-tab="explore">
+        <div class="nav-icon"><i class="fa-solid fa-compass"></i></div>
+        <span>Explore</span>
+      </button>
+      <button class="nav-item" id="nav-directions" data-tab="directions">
+        <div class="nav-icon"><i class="fa-solid fa-route"></i></div>
+        <span>Go</span>
+      </button>
+      <button class="nav-item" id="nav-saved" data-tab="saved">
+        <div class="nav-icon"><i class="fa-solid fa-bookmark"></i></div>
+        <span>Saved</span>
+      </button>
+      <button class="nav-item" id="nav-contribute" data-tab="contribute">
+        <div class="nav-icon"><i class="fa-solid fa-plus-circle"></i></div>
+        <span>Contribute</span>
+      </button>
+      <button class="nav-item" id="nav-profile" data-tab="profile">
+        <div class="nav-icon"><i class="fa-solid fa-circle-user"></i></div>
+        <span>You</span>
+      </button>
+    </nav>
+
+    <!-- ========== DIRECTIONS PANEL ========== -->
+    <div class="directions-panel hidden" id="directions-panel">
+      <div class="panel-handle"></div>
+      <div class="dir-header">
+        <button class="dir-close" id="dir-close"><i class="fa-solid fa-xmark"></i></button>
+        <h3>Get Directions</h3>
+      </div>
+      <div class="dir-inputs">
+        <div class="dir-input-wrap">
+          <div class="dir-dot blue-dot"></div>
+          <input type="text" id="dir-from" placeholder="Your location" class="dir-input" />
+          <button class="dir-locate" id="dir-locate-btn"><i class="fa-solid fa-location-dot"></i></button>
+        </div>
+        <div class="dir-swap">
+          <button id="swap-btn" aria-label="Swap directions"><i class="fa-solid fa-arrow-right-arrow-left"></i></button>
+        </div>
+        <div class="dir-input-wrap">
+          <div class="dir-dot red-dot"></div>
+          <input type="text" id="dir-to" placeholder="Choose destination" class="dir-input" />
+        </div>
+      </div>
+      <div class="transport-modes">
+        <button class="transport-btn active" data-mode="car" id="mode-car">
+          <i class="fa-solid fa-car"></i>
+          <span>Drive</span>
+        </button>
+        <button class="transport-btn" data-mode="walk" id="mode-walk">
+          <i class="fa-solid fa-person-walking"></i>
+          <span>Walk</span>
+        </button>
+        <button class="transport-btn" data-mode="transit" id="mode-transit">
+          <i class="fa-solid fa-bus"></i>
+          <span>Transit</span>
+        </button>
+        <button class="transport-btn" data-mode="cycle" id="mode-cycle">
+          <i class="fa-solid fa-bicycle"></i>
+          <span>Cycle</span>
+        </button>
+      </div>
+      <button class="get-route-btn" id="get-route-btn">
+        <i class="fa-solid fa-diamond-turn-right"></i>
+        Get Route
+      </button>
+      <div id="route-info" class="route-info hidden">
+        <div class="route-stat">
+          <i class="fa-solid fa-clock"></i>
+          <span id="route-time">--</span>
+        </div>
+        <div class="route-stat">
+          <i class="fa-solid fa-road"></i>
+          <span id="route-dist">--</span>
+        </div>
+        <button class="start-nav-btn" id="start-nav-btn">
+          <i class="fa-solid fa-play"></i> Start Navigation
+        </button>
+      </div>
+    </div>
+
+    <!-- ========== SAVED PLACES PANEL ========== -->
+    <div class="saved-panel hidden" id="saved-panel">
+      <div class="panel-handle"></div>
+      <h3 class="panel-title">Saved Places</h3>
+      <div class="saved-categories">
+        <div class="saved-cat">
+          <div class="saved-cat-icon home-icon"><i class="fa-solid fa-house"></i></div>
+          <div class="saved-cat-info">
+            <strong>Home</strong>
+            <span id="home-addr">Add home address</span>
+          </div>
+          <button class="saved-edit" id="edit-home"><i class="fa-solid fa-pencil"></i></button>
+        </div>
+        <div class="saved-cat">
+          <div class="saved-cat-icon work-icon"><i class="fa-solid fa-briefcase"></i></div>
+          <div class="saved-cat-info">
+            <strong>Work</strong>
+            <span id="work-addr">Add work address</span>
+          </div>
+          <button class="saved-edit" id="edit-work"><i class="fa-solid fa-pencil"></i></button>
+        </div>
+      </div>
+      <h4 class="saved-sub">Bookmarked</h4>
+      <div class="saved-list" id="saved-list">
+        <div class="saved-empty">
+          <i class="fa-solid fa-bookmark"></i>
+          <p>No saved places yet.<br>Tap a location to save it.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== PROFILE PANEL ========== -->
+    <div class="profile-panel hidden" id="profile-panel">
+      <div class="panel-handle"></div>
+      <div class="profile-header">
+        <div class="profile-avatar">
+          <i class="fa-solid fa-user"></i>
+        </div>
+        <div class="profile-info">
+          <h3>KeeraMaps User</h3>
+          <p>Explore the world with KeeraMaps</p>
+        </div>
+      </div>
+      <div class="profile-stats">
+        <div class="stat-card">
+          <span class="stat-num" id="stat-places">0</span>
+          <span class="stat-label">Places Saved</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num" id="stat-routes">0</span>
+          <span class="stat-label">Routes Taken</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num">∞</span>
+          <span class="stat-label">Adventures</span>
+        </div>
+      </div>
+      <div class="profile-settings">
+        <button class="setting-item" id="toggle-dark">
+          <i class="fa-solid fa-moon"></i>
+          <span>Dark Map Mode</span>
+          <div class="toggle-switch" id="dark-toggle">
+            <div class="toggle-thumb active"></div>
+          </div>
+        </button>
+        <button class="setting-item">
+          <i class="fa-solid fa-bell"></i>
+          <span>Notifications</span>
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+        <button class="setting-item">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span>Privacy</span>
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+        <button class="setting-item">
+          <i class="fa-solid fa-circle-info"></i>
+          <span>About KeeraMaps</span>
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- ========== PLACE DETAILS CARD ========== -->
+    <div class="place-card hidden" id="place-card">
+      <div class="panel-handle"></div>
+      <div class="place-card-header">
+        <div class="place-card-info">
+          <h3 id="place-name">Place Name</h3>
+          <p id="place-type"><i class="fa-solid fa-tag"></i> <span>Type</span></p>
+          <div class="place-rating">
+            <div class="stars" id="place-stars">★★★★☆</div>
+            <span id="place-reviews">(0 reviews)</span>
+          </div>
+        </div>
+        <button class="place-save-btn" id="place-save-btn" aria-label="Save place">
+          <i class="fa-regular fa-bookmark"></i>
+        </button>
+      </div>
+      <div class="place-actions">
+        <button class="place-action-btn" id="place-dir-btn">
+          <i class="fa-solid fa-diamond-turn-right"></i>
+          <span>Directions</span>
+        </button>
+        <button class="place-action-btn" id="place-share-btn">
+          <i class="fa-solid fa-share-nodes"></i>
+          <span>Share</span>
+        </button>
+        <button class="place-action-btn" id="place-street-btn">
+          <i class="fa-solid fa-street-view"></i>
+          <span>Street View</span>
+        </button>
+        <button class="place-action-btn" id="place-nearby-btn">
+          <i class="fa-solid fa-location-dot"></i>
+          <span>Nearby</span>
+        </button>
+      </div>
+      <div class="place-details">
+        <div class="place-detail-row" id="place-addr-row">
+          <i class="fa-solid fa-location-dot"></i>
+          <span id="place-addr">Loading address...</span>
+        </div>
+        <div class="place-detail-row">
+          <i class="fa-solid fa-clock"></i>
+          <span class="open-status" id="place-hours">Open now · Closes at 9 PM</span>
+        </div>
+        <div class="place-detail-row">
+          <i class="fa-solid fa-phone"></i>
+          <span>+1 (555) 000-0000</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== NAVIGATION MODE OVERLAY ========== -->
+    <div class="nav-overlay hidden" id="nav-overlay">
+      <div class="nav-top-bar">
+        <div class="nav-instruction">
+          <div class="nav-arrow" id="nav-arrow"><i class="fa-solid fa-arrow-up"></i></div>
+          <div class="nav-text">
+            <p class="nav-distance" id="nav-distance">0.3 km</p>
+            <p class="nav-street" id="nav-street">Continue straight</p>
+          </div>
+        </div>
+        <button class="nav-exit-btn" id="nav-exit-btn">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="nav-bottom-bar">
+        <div class="nav-info">
+          <div class="nav-eta">
+            <span id="nav-eta">12 min</span>
+            <small>ETA</small>
+          </div>
+          <div class="nav-remain">
+            <span id="nav-remain">2.4 km</span>
+            <small>remaining</small>
+          </div>
+        </div>
+        <button class="nav-mute-btn" id="nav-mute-btn" aria-label="Mute">
+          <i class="fa-solid fa-volume-high"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- ========== TOAST ========== -->
+    <div class="toast hidden" id="toast"></div>
+
+    <!-- ========== SCALE BAR (custom) ========== -->
+    <div class="scale-bar" id="scale-bar">
+      <canvas id="scale-canvas" width="100" height="24"></canvas>
+    </div>
+
+  </div><!-- /app -->
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Leaflet Routing Machine -->
+  <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+  <!-- App JS -->
+  <script src="app.js"></script>
+</body>
+</html>
